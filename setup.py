@@ -14,7 +14,8 @@ setup(
 	license='MIT License',
 	keywords='llama2 llama2-client client-llama2',
 	url='https://github.com/ChairChandler/LLaMa2-Client',
-	package_dir={'llama2-client': 'src'},
+	package_dir={'': 'src'},
+	packages=['llama2_client'],
 	python_requires='>=3.11',
 	install_requires=[
 		'streamlit~=1.25.0',
@@ -22,11 +23,12 @@ setup(
 		'torch~=2.0.1',
 		'accelerate~=0.21.0',
 		'xformers~=0.0.20',
-		'optimum~=1.11.0'
+		'optimum~=1.11.0',
+		'typing_extensions~=4.7.1'
     ],
 	entry_points={
 		'console_scripts': [
-			'llama2-client = llama2-client:run'
+			'llama2-client = llama2_client:run'
 		]
 	},
  	classifiers=[

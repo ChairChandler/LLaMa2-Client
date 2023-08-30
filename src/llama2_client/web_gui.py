@@ -2,7 +2,7 @@ import psutil
 from typing import cast
 import streamlit as st
 
-from .pipeline import MemoryLlamaPipeline
+from pipeline import MemoryLlamaPipeline
 
 HUGGINGFACE_MODELS = [
     "meta-llama/Llama-2-7b-chat-hf",
@@ -69,23 +69,20 @@ with st.sidebar:
     # system prompt
     sys_prompt = st.text_area('System prompt')
 
-    model_reloading = st.button('Reload model with settings')
+    model_loading = st.button('Load model with settings')
 
 # model (re)loading & session state init
 
 
-def is_first_time_loading(): return "messages" not in st.session_state
-
-
-if is_first_time_loading() or model_reloading:
-    st.session_state["sys_prompt"] = sys_prompt
-    st.session_state["messages"] = []
-    st.session_state["history"] = []
+if model_loading:
+    st.session_state.sys_prompt = sys_prompt
+    st.session_state.messages = []
+    st.session_state.history = []
     with st.spinner('Model loading'):
 
         if "model" in st.session_state:
-            del st.session_state['model']
-        st.session_state['model'] = MemoryLlamaPipeline(
+            del st.session_state.model
+        st.session_state.model = MemoryLlamaPipeline(
             model_name=cast(str, selected_model),
             maximum_memory_size_gb=cast(int, maximum_memory_size),
             min_output_length=min_length,
@@ -98,17 +95,17 @@ if is_first_time_loading() or model_reloading:
         )
 
 # chat
+if "messages" in st.session_state:
+    for msg in st.session_state.messages:
+        st.chat_message(msg["role"]).write(msg["content"])
 
-for msg in st.session_state.messages:
-    st.chat_message(msg["role"]).write(msg["content"])
+    if prompt := st.chat_input():
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        st.chat_message("user").write(prompt)
 
-if prompt := st.chat_input():
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    st.chat_message("user").write(prompt)
-
-    response = st.session_state.model.generate_response(prompt)
-    st.session_state.messages.append(
-        {"role": "assistant", "content": response})
-    st.chat_message("assistant").write(response)
-
-    st.session_state.history.append()
+        response = st.session_state.model.generate_response(prompt)
+        st.session_state.messages.append({
+            "role": "assistant",
+            "content": response
+        })
+        st.chat_message("assistant").write(response)
